@@ -10,20 +10,21 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 
-public class GetThread implements Runnable {
+public class GetPrivateChatThread implements Runnable {
     private final Gson gson;
     private int n;
+    private String user;
 
-    public GetThread() {
+    public GetPrivateChatThread(String user) {
+        this.user = user;
         gson = new GsonBuilder().setDateFormat("yyyy-MM-dd HH:mm:ss").create();
     }
 
     @Override
     public void run() {
-
         try {
             while (!Thread.interrupted()) {
-                URL url = new URL(Utils.getURL() + "/get?from=" + n);
+                URL url = new URL(Utils.getURL() + "/privatechat?from=" + n + "&user=" + user);
                 HttpURLConnection http = (HttpURLConnection) url.openConnection();
 
                 InputStream is = http.getInputStream();

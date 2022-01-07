@@ -10,7 +10,7 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 
 public class User {
-    private String login;
+    public String login;
     private String password;
 
     public User(String login, String password) {

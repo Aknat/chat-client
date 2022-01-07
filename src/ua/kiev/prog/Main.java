@@ -1,6 +1,7 @@
 package ua.kiev.prog;
 
 import java.io.IOException;
+import java.net.HttpURLConnection;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Scanner;
@@ -16,35 +17,53 @@ public class Main {
             int res;
             if (isNewUser()) {
                 res = user.sendUser(Utils.getURL() + "/reg");
-                System.out.println(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss,ms ")) + "the new user registration is performed");
+                printAppLog("the new user registration is performed");
             } else {
                 res = user.sendUser(Utils.getURL() + "/auth");
-                System.out.println(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss,ms ")) + "the new user authentication is performed");
+                printAppLog("the new user authentication is performed");
             }
-            System.out.println(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss,ms ")) + "response HTTP status code: " + res);
-
-            Thread th = new Thread(new GetThread());
-            th.setDaemon(true);
-            th.start();
+            printAppLog("response HTTP status code: ", res);
 
             if (res == 200) {
-                System.out.println(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss,ms ")) + "Enter your message: ");
-                while (true) {
-                    String text = scanner.nextLine();
-                    if (text.isEmpty()) break;
+                Thread th = new Thread(new GetThread());
+                th.setDaemon(true);
+                th.start();
 
-                    Message m = new Message(user.getLogin(), text);
+                Thread th2 = new Thread(new GetPrivateChatThread(user.getLogin()));
+                th2.setDaemon(true);
+                th2.start();
+
+                while (true) {
+                    System.out.println("Enter your message:");
+                    String text = scanner.nextLine();
+                    if (text.trim().isEmpty()) break;
+
+                    System.out.println("Enter the receiver (if empty, then message is sent to chat)");
+                    String to = scanner.nextLine();
+
+                    Message m = new Message(user.getLogin(), to, text);
                     res = m.sendMessage(Utils.getURL() + "/add");
 
-                    if (res != 200) { // 200 OK
-                        System.out.println(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss,ms ")) + "response HTTP status: " + res);
+
+                    if (res != 200) {
+                        printAppLog("response HTTP status code: ", res);
                         return;
                     }
                 }
-            } else System.out.println(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss,ms ")) + "Y failed(((");
+            } else
+                printAppLog("Y failed(((");
+
 
         } catch (IOException ex) {
             ex.printStackTrace();
         }
+    }
+
+    public static void printAppLog(String str) {
+        System.out.println("[" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss,ms")) + "] " + "APP LOG: " + str);
+    }
+
+    public static void printAppLog(String str, int httpCode) {
+        System.out.println("[" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss,ms")) + "] " + "APP LOG: " + str + httpCode);
     }
 }
